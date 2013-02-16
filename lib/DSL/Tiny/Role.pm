@@ -15,6 +15,15 @@ Returns an arrayref of dsl keyword info.
 It is lazy.  Classes which consume the role are required to supply a builder
 named C<_build_dsl_keywords>.
 
+=cut
+
+has dsl_keywords => (
+    is      => 'rw',
+    isa     => ArrayRef,
+    lazy    => 1,
+    builder => 'build_dsl_keywords',
+);
+
 =requires build_dsl_keywords
 
 A subroutine (used as the Moo{,se} builder for the L</dsl_keywords> attribute)
@@ -59,13 +68,6 @@ is presumed to also be the name of a method in the class and
 C<Sub::Exporter::Utils::curry_method> will be applied to it.
 
 =cut
-
-has dsl_keywords => (
-    is      => 'rw',
-    isa     => ArrayRef,
-    lazy    => 1,
-    builder => 'build_dsl_keywords',
-);
 
 requires qw(build_dsl_keywords);
 
