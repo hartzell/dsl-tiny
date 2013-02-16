@@ -9,7 +9,7 @@ with qw(DSL::Tiny::Role);
 use MyDelegate;
 use Sub::Exporter::Util qw(curry_chain curry_method);
 
-sub _build_dsl_keywords {
+sub build_dsl_keywords {
     return [
         qw(ape incr site value),
         baz  => { as => curry_method('bar'), },

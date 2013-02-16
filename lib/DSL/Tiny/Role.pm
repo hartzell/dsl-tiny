@@ -21,22 +21,42 @@ A subroutine (used as the Moo{,se} builder for the L</dsl_keywords> attribute)
 that returns an array reference containing information about the methods that
 should be used as keywords in the DSL.
 
-In its canonical form the contents of the array reference are a series of array
-references containing method_name => { option_hash } pairs, e.g.
+In its simplest form, the keyword arrayref contains a list of method names
+relative to class which consumes this role.
 
-  [ [ m1 => { as => kw1 } ], [ m2 => { as => kw2 ] ]
+  [ qw( m1 m2 ) ]
+
+In its canonical form the contents of the array reference are a series of array
+references containing keyword_name => { option_hash } pairs, e.g.
+
+  [ [ k1 => { as => &generator } ], [ k2 => { before => &generator ] ]
+
+Generators are as described in the L<Sub::Exporter> documentation.
 
 However, as the contents of this array reference are processed with
-Data::OptList there is a great deal of flexibility.
+Data::OptList there is a great deal of flexibility, e.g.
 
-  [ qw( m1 m2 ), m4 => { as => kw4 } ]
+  [ qw( m1 m2 ), k4 => { as => &generator } ]
 
 is equivalent to:
 
-  [ m1 => undef, m2 => undef, m4 => { as => kw4 } ]
+  [ m1 => undef, m2 => undef, k4 => { as => generator } ]
 
-Options are optional, currently the only supported option is "as", to
-explicitly associate a keyword name with a method name.
+Supported options include:
+
+=over 4
+
+=item as
+
+=item before
+
+=item after
+
+=back
+
+Options are optional.  If no C<as> generator is provided then the keyword name
+is presumed to also be the name of a method in the class and
+C<Sub::Exporter::Utils::curry_method> will be applied to it.
 
 =cut
 
@@ -44,12 +64,10 @@ has dsl_keywords => (
     is      => 'rw',
     isa     => ArrayRef,
     lazy    => 1,
-    builder => 1,
-
-    #    trigger => sub { $_[0]->clear__instance_evalator },
+    builder => 'build_dsl_keywords',
 );
 
-requires qw(_build_dsl_keywords);
+requires qw(build_dsl_keywords);
 
 sub dsl_build {
     my ( $invocant, $group, $arg ) = @_;
