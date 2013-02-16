@@ -14,24 +14,27 @@ use lib qw(t/lib);
 use MyRoleConsumingDSL;
 
 my $bar;
+
 BEGIN {
     $bar = MyRoleConsumingDSL->new();
     $bar->import('-install_dsl');
 }
 
-is(ape, "DSL sez: ape", "Ape!");
-is(site, "DSL sez: site", "Site!");
+is( ape,  "DSL sez: ape",  "Ape!" );
+is( site, "DSL sez: site", "Site!" );
 
 incr;
 incr;
 
-is(value, 2, "Incr and value worked!");
+is( value, 2, "Incr and value worked!" );
 
-is(baz(), $bar, "Using the expected instance");
-isa_ok($bar, "MyRoleConsumingDSL", "Got a bar back");
+is( baz(), $bar, "Using the expected instance" );
+isa_ok( $bar, "MyRoleConsumingDSL", "Got a bar back" );
 
 $bar->counter(200);
 
-is(value, 200, "Direct object access worked too...");
+is( value, 200, "Direct object access worked too..." );
+
+is( beep, "beep beep", "curry_chain worked!" );
 
 done_testing;

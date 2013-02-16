@@ -6,6 +6,7 @@ use Sub::Exporter -setup => { groups => { install_dsl => \&dsl_build } };
 
 use Data::OptList;
 use MooX::Types::MooseLike::Base qw(ArrayRef);
+use Sub::Exporter::Util qw(curry_method);
 
 =attr dsl_keywords
 
@@ -67,9 +68,38 @@ sub dsl_build {
 sub compile_keyword {
     my ( $self, $keyword, $args ) = @_;
 
-    my $method = $args->{method} || $keyword;
+    my $generator        = $args->{as} || curry_method($keyword);
+    my $before_generator = $args->{before};
+    my $after_generator  = $args->{after};
 
-    return sub { $self->$method(@_) };
+    my $before_code = $before_generator ? $before_generator->($self) : undef;
+    my $code        = $generator->($self);
+    my $after_code  = $after_generator ? $after_generator->($self) : undef;
+
+    if ( $before_code or $after_code ) {
+        my $new_code = sub {
+            my @rval;
+
+            $before_code->(@_) if $before_code;
+
+            # Cribbed from $Class::MOP::Method::Wrapped::_build_wrapped_method
+            # not sure that it doesn't have more parens then necessary, but...
+            (   ( defined wantarray )
+                ? (   (wantarray)
+                    ? ( @rval = $code->(@_) )
+                    : ( $rval[0] = $code->(@_) )
+                    )
+                : $code->(@_)
+            );
+
+            $after_code->(@_) if $after_code;
+
+            return unless defined wantarray;
+            return wantarray ? @rval : $rval[0];
+        };
+        return $new_code;
+    }
+    return $code;
 }
 
 1;
