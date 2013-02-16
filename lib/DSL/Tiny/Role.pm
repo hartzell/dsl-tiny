@@ -15,7 +15,7 @@ Returns an arrayref of dsl keyword info.
 It is lazy.  Classes which consume the role are required to supply a builder
 named C<_build_dsl_keywords>.
 
-=requires _build_dsl_keywords
+=requires build_dsl_keywords
 
 A subroutine (used as the Moo{,se} builder for the L</dsl_keywords> attribute)
 that returns an array reference containing information about the methods that
