@@ -2,7 +2,7 @@ package DSL::Tiny::Role;
 
 use Moo::Role;
 
-use Sub::Exporter -setup => { groups => { install_dsl => \&dsl_build } };
+use Sub::Exporter -setup => { groups => { install_dsl => \&_dsl_build } };
 
 use Data::OptList;
 use MooX::Types::MooseLike::Base qw(ArrayRef);
@@ -71,7 +71,7 @@ C<Sub::Exporter::Utils::curry_method> will be applied to it.
 
 requires qw(build_dsl_keywords);
 
-sub dsl_build {
+sub _dsl_build {
     my ( $invocant, $group, $arg ) = @_;
 
     my $instance = ref $invocant ? $invocant : $invocant->new();
@@ -79,13 +79,13 @@ sub dsl_build {
     my $keywords = Data::OptList::mkopt_hash( $instance->dsl_keywords,
         { moniker => 'keyword list' }, ['HASH'], );
 
-    my %dsl = map { $_ => $instance->compile_keyword( $_, $keywords->{$_} ) }
+    my %dsl = map { $_ => $instance->_compile_keyword( $_, $keywords->{$_} ) }
         keys $keywords;
 
     return \%dsl;
 }
 
-sub compile_keyword {
+sub _compile_keyword {
     my ( $self, $keyword, $args ) = @_;
 
     my $generator        = $args->{as} || curry_method($keyword);
