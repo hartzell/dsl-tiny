@@ -49,7 +49,6 @@ has _instance_evalator => (
     init_arg => undef,
 );
 
-
 has _anon_pkg_name => (
     is      => 'ro',
     isa     => Str,

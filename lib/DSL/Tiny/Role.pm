@@ -2,11 +2,7 @@ package DSL::Tiny::Role;
 
 use Moo::Role;
 
-use Sub::Exporter -setup => {
-    groups => {
-        install_dsl      => \&_dsl_build,
-    }
-};
+use Sub::Exporter -setup => { groups => { install_dsl => \&_dsl_build, } };
 
 use Data::OptList;
 use MooX::Types::MooseLike::Base qw(ArrayRef);
