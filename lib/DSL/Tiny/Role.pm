@@ -2,7 +2,11 @@ package DSL::Tiny::Role;
 
 use Moo::Role;
 
-use Sub::Exporter -setup => { groups => { install_dsl => \&_dsl_build, } };
+use Sub::Exporter -setup => {
+    groups => {
+        install_dsl      => \&_dsl_build,
+    }
+};
 
 use Data::OptList;
 use MooX::Types::MooseLike::Base qw(ArrayRef);
@@ -68,8 +72,6 @@ is presumed to also be the name of a method in the class and
 C<Sub::Exporter::Utils::curry_method> will be applied to it.
 
 =cut
-
-requires qw(build_dsl_keywords);
 
 =method _dsl_build
 
@@ -145,6 +147,6 @@ sub _compile_keyword {
     return $code;
 }
 
-sub goose_me { };
+sub goose_me { }
 
 1;
