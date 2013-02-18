@@ -2,7 +2,7 @@ package DSL::Tiny::Role;
 
 use Moo::Role;
 
-use Sub::Exporter -setup => { groups => { install_dsl => \&_dsl_build } };
+use Sub::Exporter -setup => { groups => { install_dsl => \&_dsl_build, } };
 
 use Data::OptList;
 use MooX::Types::MooseLike::Base qw(ArrayRef);
@@ -71,8 +71,27 @@ C<Sub::Exporter::Utils::curry_method> will be applied to it.
 
 requires qw(build_dsl_keywords);
 
+=method _dsl_build
+
+Build's up the set of keywords that L<Sub::Exporter> will install.
+
+If it can be invoked on a class (a.k.a. as a class method), usually by C<use>.
+If so, a new instance of the class will be constructed and the various keywords
+I<may> be curried with respect to that instance.
+
+If it is invoked on a class instance, usually via an explicit invocation of
+L<import> then that instance is used when constructing the keywords.
+
+It uses L<Data::OptList::mkopt_hash> to expand its argument passed in via
+C<import>.
+
+It returns a hashref whose keys are names of keywords and whose values are
+coderefs implementing the respective behavior.
+
+=cut
+
 sub _dsl_build {
-    my ( $invocant, $group, $arg ) = @_;
+    my ( $invocant, $group, $arg, $col ) = @_;
 
     my $instance = ref $invocant ? $invocant : $invocant->new();
 
@@ -84,6 +103,10 @@ sub _dsl_build {
 
     return \%dsl;
 }
+
+=method _compile_keyword
+
+=cut
 
 sub _compile_keyword {
     my ( $self, $keyword, $args ) = @_;
@@ -121,5 +144,7 @@ sub _compile_keyword {
     }
     return $code;
 }
+
+sub goose_me { };
 
 1;

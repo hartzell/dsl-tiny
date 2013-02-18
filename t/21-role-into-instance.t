@@ -37,4 +37,5 @@ is( value, 200, "Direct object access worked too..." );
 
 is( beep, "beep beep", "curry_chain worked!" );
 
+can_ok( $bar, qw(goose_me) );
 done_testing;
