@@ -48,35 +48,7 @@ particular instance of a class that consumes the role.
 use Moo::Role;
 
 use MooX::Types::MooseLike::Base qw(CodeRef Str);
-use Sub::Exporter::Util qw(curry_method);
-
-
-# have Sub::Exporter build and install a sub named "_install_evalator" (instead
-# of the using the name "import") into class that use us (directly or via
-# consuming the role).  It has the full horsepower of a
-# Sub::Exporter::import().  Calling it with no group will cause it to install
-# the default group, which causes it to install an evalator routine.  We call
-# it below with an 'into' arg and for that evalator routine into our own
-# private package.
-
-use Sub::Exporter -setup => {
-    -as     => '_install_evalator',
-    exports => { _evalator => curry_method, },
-    groups  => { default => [qw(_evalator)], },
-};
-
-sub _evalator {
-    $DB::single = 1;
-    my $self = shift;
-    my $code = shift;
-
-    $code = 'package ' . $self->_anon_pkg_name . '; ' . $code;
-
-    my $result = eval $code;
-    die $@ if $@;
-
-    return $result;
-}
+use Sub::Install;
 
 =attr _instance_evalator
 
@@ -120,7 +92,7 @@ has _anon_pkg_name => (
 ##   being instance_eval'ed,
 ## - push curried closures into the package for each of the closures,
 ## - and build a coderef that switches to that package, does the eval,
-##   dies if the eval had trouble andotherwise returns the eval's return value.
+##   dies if the eval had trouble and otherwise returns the eval's return value.
 ##
 sub _build__instance_evalator {
     my $self = shift;
@@ -131,8 +103,19 @@ sub _build__instance_evalator {
     # stuff the DSL into the fairly unique package
     $self->import( { into => $pkg_name }, qw(-install_dsl) );
 
-    # stuff an evalator routine into the same package
-    $self->_install_evalator( { into => $pkg_name } );
+    # stuff an evalator routine into the same package,
+    # closed over $self.
+    # evals a string, dies if there was trouble, returns result otherwise.
+    Sub::Install::install_sub({
+        code => sub {
+            my $code = 'package ' . $self->_anon_pkg_name . '; ' . shift;
+            my $result = eval $code;
+            die $@ if $@;
+            return $result;
+        },
+        into => $pkg_name,
+        as => '_evalator',
+    });
 
     # return a coderef to the evalator routine that
     # we pushed into the package.
