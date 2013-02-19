@@ -1,9 +1,55 @@
 package DSL::Tiny::InstanceEval;
+# ABSTRACT: Add DSL features to your class.
+
+=head1 SYNOPSIS
+
+    use Test::More;
+    use Test::Deep;
+
+    # put together class with a simple dsl
+    {
+      package MyClassWithDSL;
+      use Moo;                      # or Moose
+      with qw(DSL::Tiny::Role DSL::Tiny::InstanceEval);
+
+      sub _build_dsl_keywords { [ qw(add_values) ] };
+
+      has values => (is => 'ro',
+                     default => sub { [] },
+                    );
+
+      sub add_values {
+          my $self = shift;
+          push @{$self->values}, @_;
+      }
+    }
+
+    # make a new instance
+    my $dsl = MyClassWithDSL->new();
+
+    my $code = <<EOC;
+    add_values(qw(2 1));
+    add_values(qw(3));
+    EOC
+
+    my $return_value = $dsl->instance_eval($code);
+    cmp_deeply($dsl->values, bag(qw(1 2 3)), "Values were added");
+
+    done_testing;
+
+=head1 DESCRIPTION
+
+This package provides a simple interface, L</instance_eval>, for evaluating
+snippets of a DSL (implemented with L<DSL::Tiny::Role) with respect to a
+particular instance of a class that consumes the role.
+
+=cut
 
 use Moo::Role;
 
 use MooX::Types::MooseLike::Base qw(CodeRef Str);
 use Sub::Exporter::Util qw(curry_method);
+
 
 # have Sub::Exporter build and install a sub named "_install_evalator" (instead
 # of the using the name "import") into class that use us (directly or via
@@ -22,10 +68,13 @@ use Sub::Exporter -setup => {
 sub _evalator {
     $DB::single = 1;
     my $self = shift;
-    my $code = 'package ' . $self->_anon_pkg_name . '; ' . shift;
+    my $code = shift;
+
+    $code = 'package ' . $self->_anon_pkg_name . '; ' . $code;
 
     my $result = eval $code;
     die $@ if $@;
+
     return $result;
 }
 
