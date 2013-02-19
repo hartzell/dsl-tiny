@@ -39,10 +39,10 @@ $instance->counter(200);
 is( value, 200, "Direct object access worked too..." );
 
 # call a method that's been curry_chained
-is( beep,                       "beep beep", "curry_chain worked!" );
+is( beep, "beep beep", "curry_chain worked!" );
 
 # see if the before/after subs ran as expected.
-is( $instance->after_counter(), 1,           "after counter code ran" );
+is( $instance->after_counter(),  1, "after counter code ran" );
 is( $instance->before_counter(), 3, "before counter code correctly" );
 
 done_testing;
