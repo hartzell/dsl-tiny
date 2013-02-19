@@ -1,4 +1,5 @@
 package DSL::Tiny::InstanceEval;
+
 # ABSTRACT: Add DSL features to your class.
 
 =head1 SYNOPSIS
@@ -50,6 +51,29 @@ use Moo::Role;
 use MooX::Types::MooseLike::Base qw(CodeRef Str);
 use Sub::Install;
 
+=attr _anon_pkg_name
+
+Private attribute, used to set up a package to stash private stuff.
+
+=cut
+
+has _anon_pkg_name => (
+    is      => 'ro',
+    isa     => Str,
+    lazy    => 1,
+    builder => '_build__anon_pkg_name',
+);
+
+{
+    # no one can see me if I have my curly braces over my eyes....
+    my $ANON_SERIAL = 0;
+
+    # close over $ANON_SERIAL
+    sub _build__anon_pkg_name {
+        return __PACKAGE__ . "::ANON_" . ++$ANON_SERIAL;
+    }
+}
+
 =attr _instance_evalator
 
 PRIVATE
@@ -65,27 +89,9 @@ has _instance_evalator => (
     is       => 'ro',
     isa      => CodeRef,
     lazy     => 1,
-    builder  => 1,
-    clearer  => 1,
+    builder  => '_build__instance_evalator',
     init_arg => undef,
 );
-
-has _anon_pkg_name => (
-    is      => 'ro',
-    isa     => Str,
-    lazy    => 1,
-    builder => qw(_build__anon_pkg_name),
-);
-
-{
-    # no one can see me if I have my curly braces over my eyes....
-    my $ANON_SERIAL = 0;
-
-    # close over $ANON_SERIAL
-    sub _build__anon_pkg_name {
-        return __PACKAGE__ . "::ANON_" . ++$ANON_SERIAL;
-    }
-}
 
 ##
 ## - set up an environment (anonymous package) in which to execute code that is
@@ -104,18 +110,19 @@ sub _build__instance_evalator {
     $self->import( { into => $pkg_name }, qw(-install_dsl) );
 
     # stuff an evalator routine into the same package,
-    # closed over $self.
+    # closed over $pkg_name
     # evals a string, dies if there was trouble, returns result otherwise.
-    Sub::Install::install_sub({
-        code => sub {
-            my $code = 'package ' . $self->_anon_pkg_name . '; ' . shift;
-            my $result = eval $code;
-            die $@ if $@;
-            return $result;
-        },
-        into => $pkg_name,
-        as => '_evalator',
-    });
+    Sub::Install::install_sub(
+        {   code => sub {
+                my $code   = 'package ' . $pkg_name . '; ' . shift;
+                my $result = eval $code;
+                die $@ if $@;
+                return $result;
+            },
+            into => $pkg_name,
+            as   => '_evalator',
+        }
+    );
 
     # return a coderef to the evalator routine that
     # we pushed into the package.
@@ -138,6 +145,13 @@ sub instance_eval {
 
     $self->_instance_evalator()->(@_);
 }
+
+=requires build_dsl_keywords
+
+Requires build_dsl_keywords, as a proxy for being used in a class that consumes
+DSL::Tiny::Role.
+
+=cut
 
 requires qw(build_dsl_keywords);
 
