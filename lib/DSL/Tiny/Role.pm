@@ -1,4 +1,6 @@
+## no critic (TestingAndDebugging::RequireUseStrict)
 package DSL::Tiny::Role;
+## critic
 
 # ABSTRACT: Import a DSL into a package.
 
@@ -173,7 +175,10 @@ sub _dsl_build {
     my $keywords = Data::OptList::mkopt_hash( $instance->dsl_keywords,
         { moniker => 'keyword list' }, ['HASH'], );
 
-    my %dsl = map { $_ => $instance->_compile_keyword( $_, $keywords->{$_} ) }
+    my %dsl = map {
+        $_ => $instance->_compile_keyword( $_,
+            $keywords->{$_} )    ## no critic (ProhibitAccessOfPrivateData)
+        }
         keys $keywords;
 
     return \%dsl;
@@ -186,9 +191,12 @@ sub _dsl_build {
 sub _compile_keyword {
     my ( $self, $keyword, $args ) = @_;
 
-    my $generator        = $args->{as} || curry_method($keyword);
-    my $before_generator = $args->{before};
-    my $after_generator  = $args->{after};
+    my $generator = $args->{as}    ## no critic (ProhibitAccessOfPrivateData)
+        || curry_method($keyword);
+    my $before_generator
+        = $args->{before};         ## no critic (ProhibitAccessOfPrivateData)
+    my $after_generator
+        = $args->{after};          ## no critic (ProhibitAccessOfPrivateData)
 
     my $before_code = $before_generator ? $before_generator->($self) : undef;
     my $code        = $generator->($self);
@@ -219,7 +227,5 @@ sub _compile_keyword {
     }
     return $code;
 }
-
-sub goose_me { }
 
 1;

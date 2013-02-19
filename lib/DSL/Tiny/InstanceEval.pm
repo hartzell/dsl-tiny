@@ -1,4 +1,6 @@
+## no critic (TestingAndDebugging::RequireUseStrict)
 package DSL::Tiny::InstanceEval;
+## critic
 
 # ABSTRACT: Add DSL features to your class.
 
@@ -41,7 +43,7 @@ package DSL::Tiny::InstanceEval;
 =head1 DESCRIPTION
 
 This package provides a simple interface, L</instance_eval>, for evaluating
-snippets of a DSL (implemented with L<DSL::Tiny::Role) with respect to a
+snippets of a DSL (implemented with L<DSL::Tiny::Role>) with respect to a
 particular instance of a class that consumes the role.
 
 =cut
@@ -114,8 +116,8 @@ sub _build__instance_evalator {
     # evals a string, dies if there was trouble, returns result otherwise.
     Sub::Install::install_sub(
         {   code => sub {
-                my $code   = 'package ' . $pkg_name . '; ' . shift;
-                my $result = eval $code;
+                my $code = 'package ' . $pkg_name . '; ' . shift;
+                my $result = eval $code;    ## no critic
                 die $@ if $@;
                 return $result;
             },
