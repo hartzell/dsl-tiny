@@ -1,4 +1,4 @@
-## no critic (TestingAndDebugging::RequireUseStrict)
+## no critic (RequireUseStrict RequireUseWarnings)
 package DSL::Tiny::Role;
 ## critic
 
