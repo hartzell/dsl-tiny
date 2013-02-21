@@ -75,6 +75,13 @@ use MooX::Types::MooseLike::Base qw(ArrayRef);
 use Params::Util qw(_ARRAYLIKE);
 use Sub::Exporter::Util qw(curry_method);
 
+=method install_dsl
+
+A synonym for the Sub::Exporter generated import method.  Sounds better when
+one uses it to install into an instance.
+
+=cut
+
 BEGIN { *install_dsl = \&import; }
 
 =attr dsl_keywords
