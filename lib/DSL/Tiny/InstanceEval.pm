@@ -51,7 +51,6 @@ particular instance of a class that consumes the role.
 use Moo::Role;
 
 use MooX::Types::MooseLike::Base qw(CodeRef Str);
-use Sub::Install;
 
 =attr _anon_pkg_name
 
@@ -117,17 +116,12 @@ sub _build__instance_evalator {
 
     # return a coderef to the evalator routine that
     # we pushed into the package.
-    return Sub::Install::install_sub(
-        {   code => sub {
-                my $code = 'package ' . $pkg_name . '; ' . shift;
-                my $result = eval $code;    ## no critic (ProhibitStringyEval)
-                die $@ if $@;
-                return $result;
-            },
-            into => $pkg_name,
-            as   => '_evalator',
-        }
-    );
+    return sub {
+        my $code = 'package ' . $pkg_name . '; ' . shift;
+        my $result = eval $code;    ## no critic (ProhibitStringyEval)
+        die $@ if $@;
+        return $result;
+    };
 }
 
 =method instance_eval
