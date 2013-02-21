@@ -1,6 +1,6 @@
 # Globals
 severity = 3
-verbose = 9
+verbose = 2
 theme = bugs || complexity || core || performance || tests || bangs || dangerous || risky
 
 [-Modules::RequireExplicitPackage]
@@ -43,6 +43,9 @@ theme = bugs || complexity || core || performance || tests || bangs || dangerous
 
 [Variables::ProhibitPunctuationVars]
 allow = $@ $!
+
+[TestingAndDebugging::RequireUseWarnings]
+equivalent_modules = Moo::Role
 
 # Thought about
 # [CodeLayout::ProhibitHashBarewords]

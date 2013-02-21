@@ -70,7 +70,7 @@ has _anon_pkg_name => (
     my $ANON_SERIAL = 0;
 
     # close over $ANON_SERIAL
-    sub _build__anon_pkg_name {
+    sub _build__anon_pkg_name { ## no critic(ProhibitUnusedPrivateSubroutines)
         return __PACKAGE__ . "::ANON_" . ++$ANON_SERIAL;
     }
 }
@@ -101,7 +101,7 @@ has _instance_evalator => (
 ## - and build a coderef that switches to that package, does the eval,
 ##   dies if the eval had trouble and otherwise returns the eval's return value.
 ##
-sub _build__instance_evalator {
+sub _build__instance_evalator { ## no critic(ProhibitUnusedPrivateSubroutines)
     my $self = shift;
 
     # make up a fairly unique package
@@ -119,7 +119,7 @@ sub _build__instance_evalator {
     return sub {
         my $code = 'package ' . $pkg_name . '; ' . shift;
         my $result = eval $code;    ## no critic (ProhibitStringyEval)
-        die $@ if $@;
+        die $@ if $@;               ## no critic (RequireCarping)
         return $result;
     };
 }
@@ -135,10 +135,10 @@ See the synopsis for an example.
 
 =cut
 
-sub instance_eval {
+sub instance_eval {    ## no critic(RequireArgUnpacking)
     my $self = shift;
 
-    $self->_instance_evalator()->(@_);
+    return $self->_instance_evalator()->(@_);
 }
 
 =requires build_dsl_keywords
