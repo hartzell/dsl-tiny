@@ -115,7 +115,9 @@ sub _build__instance_evalator {
     # closed over $pkg_name
     # evals a string, dies if there was trouble, returns result otherwise.
 
-    my $evalator_coderef = Sub::Install::install_sub(
+    # return a coderef to the evalator routine that
+    # we pushed into the package.
+    return Sub::Install::install_sub(
         {   code => sub {
                 my $code = 'package ' . $pkg_name . '; ' . shift;
                 my $result = eval $code;    ## no critic (ProhibitStringyEval)
@@ -126,10 +128,6 @@ sub _build__instance_evalator {
             as   => '_evalator',
         }
     );
-
-    # return a coderef to the evalator routine that
-    # we pushed into the package.
-    return $evalator_coderef;
 }
 
 =method instance_eval
