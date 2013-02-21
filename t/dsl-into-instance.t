@@ -9,6 +9,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Deep;
 
 use lib qw(t/lib);
 use MyDSL;
@@ -20,30 +21,93 @@ BEGIN {
     $dsl->import('-install_dsl');
 }
 
-# simple sub worked
-is( callme, "sometime...", "callme worked" );
+isa_ok( $dsl, 'MyDSL' );
+is($dsl->does('DSL::Tiny::Role'), 1, "Object does the right role");
 
-# see if we can access an attr (and fire before sub)
-is( value, 0, "Incr and value worked!" );
-incr;
-incr;
-is( value, 2, "Incr and value worked!" );
+# check the call_log and a simple invocation of main
+cmp_deeply( $dsl->call_log, [], 'call log starts off empty' );
+main;
+cmp_deeply( $dsl->call_log, [qw(main)], 'logged call to main' );
 
-# grab underlying instance, via renamed sub
-my $instance = break_encapsulation;
-isa_ok( $instance, "MyDSL", "Got a dsl back" );
-is( $instance->value, 2, "Seems like the right instance" );
+# check that clearing call_log works.
+clear_call_log;
+cmp_deeply( $dsl->call_log, [], 'clear_call_log works' );
 
-# see if we can poke it directly and expose the result
-$instance->counter(200);
-is( value, 200, "Direct object access worked too..." );
+# test that curry_chain works
+is( test_curry_chain, 'beep beep', 'curried chain says beep beep' );
 
-# call a method that's been curry_chained
-is( beep, "beep beep", "curry_chain worked!" );
+# a single before action
+test_simple_before;
+cmp_deeply( $dsl->call_log, [qw(before_1 main)], 'simple before works' );
+clear_call_log;
 
-# see if the before/after subs ran as expected.
-is( $instance->after_counter(),  1, "after counter code ran" );
-is( $instance->before_counter(), 3, "before counter code correctly" );
+# multiple before actions
+test_multi_before;
+cmp_deeply(
+    $dsl->call_log,
+    [qw(before_1 before_2 main)],
+    'multi before works'
+);
+clear_call_log;
+
+# a single after action
+test_simple_after;
+cmp_deeply( $dsl->call_log, [qw(main after_1)], 'simple after works' );
+clear_call_log;
+
+# multiple after actions
+test_multi_after;
+cmp_deeply( $dsl->call_log, [qw(main after_1 after_2)], 'multi after works' );
+clear_call_log;
+
+# something for everyone
+test_complex;
+cmp_deeply(
+    $dsl->call_log,
+    [qw(before_1 before_2 main after_1 after_2)],
+    'multi after works'
+);
+clear_call_log;
+
+## test context handling
+
+# void context
+my_context;
+cmp_deeply( $dsl->call_log, [qw(void_context)], 'void context works' );
+clear_call_log;
+
+# scalar context
+my $dummy = my_context;
+cmp_deeply( $dsl->call_log, [qw(scalar_context)], 'scalar context works' );
+clear_call_log;
+
+# array context
+my @dummy = my_context;
+cmp_deeply( $dsl->call_log, [qw(array_context)], 'array context works' );
+clear_call_log;
+
+# push a bunch of stuff onto the call_log and use it to test
+# context handling again, differently
+test_complex;
+my $count       = scalar call_log_as_array;
+my @log_entries = call_log_as_array;
+is( $count, 5, "fancier context test, scalar version" );
+cmp_deeply(
+    \@log_entries,
+    [qw(before_1 before_2 main after_1 after_2)],
+    'fancier context test, array version'
+);
+clear_call_log;
+
+# test argument handling, single scalar
+argulator("a scalar");
+cmp_deeply( $dsl->call_log, ['a scalar'], 'scalar arg works' );
+clear_call_log;
+
+# test argument handling, list of args
+argulator(qw(a list of things));
+cmp_deeply( $dsl->call_log, ['a::list::of::things'], 'list arg works' );
+clear_call_log;
 
 done_testing;
 

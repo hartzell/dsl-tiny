@@ -6,54 +6,99 @@ use Moo;
 
 with qw(DSL::Tiny::Role);
 
-use MyDelegate;
+use MyHelper;
 use Sub::Exporter::Util qw(curry_chain curry_method);
 
 sub build_dsl_keywords {
     return [
-        qw(callme incr),
+        # simple keyword -> curry_method examples
+        qw(call_log_as_array clear_call_log main),
+
+        # simple keyword, written differently
+        'my_context',
+
+        # use different keyword/method names and use curry_method
         break_encapsulation => { as => curry_method('return_self'), },
-        beep                => {
-            before => [ curry_method('bleeper'), curry_method('blooper'), ],
-            as    => curry_chain( delegate => 'beep' ),
-            after => curry_method('do_it_after'),
+
+        # chain through has_a relationship
+        test_curry_chain => { as => curry_chain( a_helper => 'beep' ), },
+
+        # a single before generator
+        test_simple_before => {
+            as     => curry_method('main'),
+            before => curry_method('before_1'),
         },
-        value => {
-            before => [
-                curry_method('do_it_before'), curry_method('blooper'),
-                curry_method('bleeper'),
-            ]
+
+        # several before generators
+        test_multi_before => {
+            as     => curry_method('main'),
+            before => [ curry_method('before_1'), curry_method('before_2'), ],
         },
+
+        # a single after generator
+        test_simple_after => {
+            after => curry_method('after_1'),
+            as    => curry_method('main'),
+        },
+
+        # several after generators
+        test_multi_after => {
+            after => [ curry_method('after_1'), curry_method('after_2'), ],
+            as    => curry_method('main'),
+        },
+
+        # a bit of everything
+        test_complex => {
+            after  => [ curry_method('after_1'),  curry_method('after_2'), ],
+            as     => curry_method('main'),
+            before => [ curry_method('before_1'), curry_method('before_2'), ],
+        },
+
+        # a method that stuffs its args into the call log
+        qw(argulator),
+
     ];
 }
 
-has before_counter => ( is => 'rw', default => sub {0}, );
-has counter        => ( is => 'rw', default => sub {0}, );
-has after_counter  => ( is => 'rw', default => sub {0}, );
+has a_helper => ( is => 'rw', default => sub { return MyHelper->new() } );
 
-sub do_it_before {
+has call_log => (
+    clearer => 'clear_call_log',
+    default => sub { [] },
+    is      => 'rw',
+    lazy    => 1
+);
+
+sub after_1 { push @{ $_[0]->call_log }, 'after_1' }
+sub after_2 { push @{ $_[0]->call_log }, 'after_2' }
+
+sub argulator {
     my $self = shift;
-    my $i    = $self->before_counter() + 1;
-    $self->before_counter($i);
+    push @{ $self->call_log }, join "::", @_;
 }
 
-sub blooper { print "BLOOP\n"; }
-sub bleeper { print "BLEEP\n"; }
+sub before_1 { push @{ $_[0]->call_log }, 'before_1' }
+sub before_2 { push @{ $_[0]->call_log }, 'before_2' }
 
-sub do_it_after {
+sub call_log_as_array { @{ $_[0]->call_log } }
+
+sub main { push @{ $_[0]->call_log }, 'main' }
+
+sub my_context {
     my $self = shift;
-    my $i    = $self->after_counter() + 1;
-    $self->after_counter($i);
+    if ( defined wantarray ) {
+        if (wantarray) {
+            push @{ $self->call_log }, 'array_context';
+        }
+        else {
+            push @{ $self->call_log }, 'scalar_context';
+        }
+    }
+    else {
+        push @{ $self->call_log }, 'void_context';
+    }
 }
-
-sub callme { return "sometime..." }
 
 sub return_self { return $_[0] }
-
-sub delegate { return MyDelegate->new() }
-
-sub incr { $_[0]->counter( $_[0]->counter() + 1 ) }
-
-sub value { $_[0]->counter }
 
 1;

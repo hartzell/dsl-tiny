@@ -1,5 +1,5 @@
 
-package MyDelegate;
+package MyHelper;
 use Moo;
 
 sub beep { return "beep beep" }
