@@ -108,7 +108,7 @@ sub _build__instance_evalator { ## no critic(ProhibitUnusedPrivateSubroutines)
     my $pkg_name = $self->_anon_pkg_name();
 
     # stuff the DSL into the fairly unique package
-    $self->import( { into => $pkg_name }, qw(-install_dsl) );
+    $self->install_dsl( { into => $pkg_name }, qw(-install_dsl) );
 
     # stuff an evalator routine into the same package,
     # closed over $pkg_name

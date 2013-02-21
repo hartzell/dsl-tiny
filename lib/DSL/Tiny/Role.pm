@@ -75,6 +75,8 @@ use MooX::Types::MooseLike::Base qw(ArrayRef);
 use Params::Util qw(_ARRAYLIKE);
 use Sub::Exporter::Util qw(curry_method);
 
+BEGIN { *install_dsl = \&import; }
+
 =attr dsl_keywords
 
 Returns an arrayref of dsl keyword info.

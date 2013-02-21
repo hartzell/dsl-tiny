@@ -18,7 +18,7 @@ my $dsl;
 
 BEGIN {
     $dsl = MyDSL->new();
-    $dsl->import('-install_dsl');
+    $dsl->install_dsl('-install_dsl');
 }
 
 isa_ok( $dsl, 'MyDSL' );
