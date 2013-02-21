@@ -182,10 +182,7 @@ sub _dsl_build {
     my $keywords = Data::OptList::mkopt_hash( $instance->dsl_keywords,
         { moniker => 'keyword list' }, ['HASH'], );
 
-    my %dsl = map {
-        $_ => $instance->_compile_keyword( $_,
-            $keywords->{$_} )
-        }
+    my %dsl = map { $_ => $instance->_compile_keyword( $_, $keywords->{$_} ) }
         keys $keywords;
 
     return \%dsl;
