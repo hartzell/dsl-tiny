@@ -6,16 +6,20 @@ use Moo;
 
 with qw(DSL::Tiny::Role);
 
+use MyDSL::Util qw(curry_with_tracer_call naked_generator);
 use MyHelper;
 use Sub::Exporter::Util qw(curry_chain curry_method);
 
 sub build_dsl_keywords {
     return [
         # simple keyword -> curry_method examples
-        qw(call_log_as_array clear_call_log main),
+        qw(call_log_as_array clear_call_log),
 
         # simple keyword, written differently
         'my_context',
+
+        # test explicit call to curry_method w/out renaming.
+        main => { as => curry_method, },
 
         # use different keyword/method names and use curry_method
         break_encapsulation => { as => curry_method('return_self'), },
@@ -57,6 +61,12 @@ sub build_dsl_keywords {
         # a method that stuffs its args into the call log
         qw(argulator),
 
+        qw(clear_trace_log),
+        test_alternate_currier => { as => curry_with_tracer_call('main'), },
+
+        naked => { as => naked_generator },
+        bare => { as => naked_generator('naked') },
+
     ];
 }
 
@@ -64,6 +74,13 @@ has a_helper => ( is => 'rw', default => sub { return MyHelper->new() } );
 
 has call_log => (
     clearer => 'clear_call_log',
+    default => sub { [] },
+    is      => 'rw',
+    lazy    => 1
+);
+
+has trace_log => (
+    clearer => 'clear_trace_log',
     default => sub { [] },
     is      => 'rw',
     lazy    => 1
@@ -83,6 +100,8 @@ sub before_2 { push @{ $_[0]->call_log }, 'before_2' }
 sub call_log_as_array { @{ $_[0]->call_log } }
 
 sub main { push @{ $_[0]->call_log }, 'main' }
+
+sub naked { return "buck" }
 
 sub my_context {
     my $self = shift;

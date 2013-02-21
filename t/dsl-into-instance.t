@@ -22,7 +22,7 @@ BEGIN {
 }
 
 isa_ok( $dsl, 'MyDSL' );
-is($dsl->does('DSL::Tiny::Role'), 1, "Object does the right role");
+is( $dsl->does('DSL::Tiny::Role'), 1, "Object does the right role" );
 
 # check the call_log and a simple invocation of main
 cmp_deeply( $dsl->call_log, [], 'call log starts off empty' );
@@ -108,6 +108,27 @@ clear_call_log;
 argulator(qw(a list of things));
 cmp_deeply( $dsl->call_log, ['a::list::of::things'], 'list arg works' );
 clear_call_log;
+
+# test alternate currier
+test_alternate_currier;
+cmp_deeply(
+    $dsl->trace_log,
+    ['tracing call to main()'],
+    'tracing currier works'
+);
+clear_trace_log;
+
+# test alternate currier with some args
+test_alternate_currier(qw(fee fi fo));
+cmp_deeply(
+    $dsl->trace_log,
+    ['tracing call to main(fee, fi, fo)'],
+    'tracing currier works with args'
+);
+clear_trace_log;
+
+is(naked, "buck", 'naked generator works');
+is(bare, "buck", 'naked generator w/ rename works');
 
 done_testing;
 

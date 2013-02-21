@@ -198,7 +198,7 @@ sub _compile_keyword {
 
     # generate code for keyword 
     my $code_generator = $args->{as} || curry_method($keyword);
-    my $code = $code_generator->($self);
+    my $code = $code_generator->($self, $keyword);
 
     # generate before code, if any
     # make sure before is an array ref
