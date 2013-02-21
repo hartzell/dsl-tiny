@@ -90,6 +90,7 @@ use Sub::Exporter -setup => { groups => { install_dsl => \&_dsl_build, } };
 
 use Data::OptList;
 use MooX::Types::MooseLike::Base qw(ArrayRef);
+use Params::Util qw(_ARRAYLIKE);
 use Sub::Exporter::Util qw(curry_method);
 
 =attr dsl_keywords
@@ -195,19 +196,27 @@ sub _dsl_build {
 sub _compile_keyword {
     my ( $self, $keyword, $args ) = @_;
 
-    my $generator        = $args->{as} || curry_method($keyword);
-    my $before_generator = $args->{before};
-    my $after_generator  = $args->{after};
+    # generate code for keyword 
+    my $code_generator = $args->{as} || curry_method($keyword);
+    my $code = $code_generator->($self);
 
-    my $before_code = $before_generator ? $before_generator->($self) : undef;
-    my $code        = $generator->($self);
-    my $after_code  = $after_generator ? $after_generator->($self) : undef;
+    # generate before code, if any
+    # make sure before is an array ref
+    # call each generator (if any), save resulting coderefs
+    my $before = $args->{before};
+    $before = [$before] unless _ARRAYLIKE($before);
+    my @before_code = map { $_->($self) } grep { defined $_ } @{$before};
 
-    if ( $before_code or $after_code ) {
+    # generate after code, if any
+    my $after = $args->{after};
+    $after = [$after] unless _ARRAYLIKE($after);
+    my @after_code = map { $_->($self) } grep { defined $_ } @{$after};
+
+    if ( @before_code or @after_code ) {
         my $new_code = sub {
             my @rval;
 
-            $before_code->(@_) if $before_code;
+            $_->(@_) for @before_code;
 
             # Cribbed from $Class::MOP::Method::Wrapped::_build_wrapped_method
             # not sure that it doesn't have more parens then necessary, but
@@ -220,13 +229,14 @@ sub _compile_keyword {
                 : $code->(@_)
             );
 
-            $after_code->(@_) if $after_code;
+            $_->(@_) for @after_code;
 
             return unless defined wantarray;
             return wantarray ? @rval : $rval[0];
         };
         return $new_code;
     }
+
     return $code;
 }
 

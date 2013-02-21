@@ -14,10 +14,16 @@ sub build_dsl_keywords {
         qw(callme incr),
         break_encapsulation => { as => curry_method('return_self'), },
         beep                => {
+            before => [ curry_method('bleeper'), curry_method('blooper'), ],
             as    => curry_chain( delegate => 'beep' ),
             after => curry_method('do_it_after'),
         },
-        value => { before => curry_method('do_it_before'), },
+        value => {
+            before => [
+                curry_method('do_it_before'), curry_method('blooper'),
+                curry_method('bleeper'),
+            ]
+        },
     ];
 }
 
@@ -30,6 +36,9 @@ sub do_it_before {
     my $i    = $self->before_counter() + 1;
     $self->before_counter($i);
 }
+
+sub blooper { print "BLOOP\n"; }
+sub bleeper { print "BLEEP\n"; }
 
 sub do_it_after {
     my $self = shift;
