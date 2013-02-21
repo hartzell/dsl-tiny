@@ -6,78 +6,60 @@ package DSL::Tiny::Role;
 
 =head1 SYNOPSIS
 
-    # in a file that ends up on @INC, e.g. MyDSL.pm
+    # in a file that ends up on @INC, e.g. MooseDSL.pm
     # put together class with a simple dsl
-    package MyDSL;
+    package MooseDSL;
     
-    use Moo;
+    use Moose;  # or use Moo;
     
     with qw(DSL::Tiny::Role);
-
-    use MyHelper;
-    use Sub::Exporter::Util qw(curry_chain curry_method);
     
-    # required by DSL::Tiny::Role
     sub build_dsl_keywords {
         return [
-            qw(callme incr),
-            break_encapsulation => { as => curry_method('return_self'), },
-            beep                => {
-                as    => curry_chain( helper => 'beep' ),
-                after => curry_method('do_it_after'),
-            },
-            value => { before => curry_method('do_it_before'), },
+            # simple keyword -> curry_method examples
+            qw(argulator return_self clear_call_log),
         ];
     }
     
-    has before_counter => ( is => 'rw', default => sub {0}, );
-    has counter        => ( is => 'rw', default => sub {0}, );
-    has after_counter  => ( is => 'rw', default => sub {0}, );
+    has call_log => (
+        clearer => 'clear_call_log',
+        default => sub { [] },
+        is      => 'rw',
+        lazy    => 1
+    );
     
-    # silly e.g. count calls to do_it_before
-    sub do_it_before {
+    sub argulator {
         my $self = shift;
-        my $i    = $self->before_counter() + 1;
-        $self->before_counter($i);
+        push @{ $self->call_log }, join "::", @_;
     }
-    
-    # silly e.g. count calls to do_it_after
-    sub do_it_after {
-        my $self = shift;
-        my $i    = $self->after_counter() + 1;
-        $self->after_counter($i);
-    }
-    
-    sub callme { return "sometime..." }
     
     sub return_self { return $_[0] }
     
-    sub helper { return MyHelper->new() }
-    
-    sub incr { $_[0]->counter( $_[0]->counter() + 1 ) }
-    
-    sub value { $_[0]->counter }
-    
     1;
-    
+
     ################################################################
 
     # and then in another file you can use that DSL
 
-    use MyDSL qw(-install_dsl);
-
     use Test::More;
-
-    # value and incr twiddle the counter attr
-    is(value, 0, "Got the correct value");
-    incr;
-    incr;
-    is(value, 2, "Got the correct value");
-
-    # simple method call, with a return value
-    is(callme, "sometime...", "Got the right response");
-
-    # etc....
+    use Test::Deep;
+    
+    use MooseDSL qw( -install_dsl );
+    
+    # peek under the covers, get instance
+    my $dsl = return_self;
+    isa_ok( $dsl, 'MooseDSL' );
+    
+    # test argument handling, single scalar
+    argulator("a scalar");
+    cmp_deeply( $dsl->call_log, ['a scalar'], 'scalar arg works' );
+    clear_call_log;
+    
+    # test argument handling, list of args
+    argulator(qw(a list of things));
+    cmp_deeply( $dsl->call_log, ['a::list::of::things'], 'list arg works' );
+    clear_call_log;
+    
     done_testing;
 
 =head1 DESCRIPTION
