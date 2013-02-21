@@ -6,23 +6,24 @@ package DSL::Tiny::Role;
 
 =head1 SYNOPSIS
 
-    # in e.g. MyDSL.pm
+    # in a file that ends up on @INC, e.g. MyDSL.pm
     # put together class with a simple dsl
     package MyDSL;
     
     use Moo;
     
     with qw(DSL::Tiny::Role);
-    
-    use MyDelegate;
+
+    use MyHelper;
     use Sub::Exporter::Util qw(curry_chain curry_method);
     
+    # required by DSL::Tiny::Role
     sub build_dsl_keywords {
         return [
             qw(callme incr),
             break_encapsulation => { as => curry_method('return_self'), },
             beep                => {
-                as    => curry_chain( delegate => 'beep' ),
+                as    => curry_chain( helper => 'beep' ),
                 after => curry_method('do_it_after'),
             },
             value => { before => curry_method('do_it_before'), },
@@ -33,12 +34,14 @@ package DSL::Tiny::Role;
     has counter        => ( is => 'rw', default => sub {0}, );
     has after_counter  => ( is => 'rw', default => sub {0}, );
     
+    # silly e.g. count calls to do_it_before
     sub do_it_before {
         my $self = shift;
         my $i    = $self->before_counter() + 1;
         $self->before_counter($i);
     }
     
+    # silly e.g. count calls to do_it_after
     sub do_it_after {
         my $self = shift;
         my $i    = $self->after_counter() + 1;
@@ -49,7 +52,7 @@ package DSL::Tiny::Role;
     
     sub return_self { return $_[0] }
     
-    sub delegate { return MyDelegate->new() }
+    sub helper { return MyHelper->new() }
     
     sub incr { $_[0]->counter( $_[0]->counter() + 1 ) }
     
@@ -59,17 +62,19 @@ package DSL::Tiny::Role;
     
     ################################################################
 
-    # and then in another package
+    # and then in another file you can use that DSL
 
-    use MyDSL;
+    use MyDSL qw(-install_dsl);
 
     use Test::More;
 
+    # value and incr twiddle the counter attr
     is(value, 0, "Got the correct value");
     incr;
     incr;
     is(value, 2, "Got the correct value");
 
+    # simple method call, with a return value
     is(callme, "sometime...", "Got the right response");
 
     # etc....
@@ -105,14 +110,9 @@ has dsl_keywords => (
 
 =requires build_dsl_keywords
 
-A subroutine (used as the Moo{,se} builder for the L</dsl_keywords> attribute)
-that returns an array reference containing information about the methods that
-should be used as keywords in the DSL.
-
-In its simplest form, the keyword arrayref contains a list of method names
-relative to class which consumes this role.
-
-  [ qw( m1 m2 ) ]
+A subroutine, used as the Moo{,se} builder for the L</dsl_keywords> attribute.
+It returns an array reference containing information about the methods and
+subroutines that implement the keywords in the DSL.
 
 In its canonical form the contents of the array reference are a series of array
 references containing keyword_name => { option_hash } pairs, e.g.
@@ -130,6 +130,11 @@ is equivalent to:
 
   [ m1 => undef, m2 => undef, k4 => { as => generator } ]
 
+In its simplest form, the keyword arrayref contains a list of method names
+relative to class which consumes this role.
+
+  [ qw( m1 m2 ) ]
+
 Supported options include:
 
 =over 4
@@ -142,42 +147,44 @@ Supported options include:
 
 =back
 
-Options are optional.  If no C<as> generator is provided then the keyword name
-is presumed to also be the name of a method in the class and
-C<Sub::Exporter::Utils::curry_method> will be applied to it.
+Options are optional.  In particular, if no C<as> generator is provided then
+the keyword name is presumed to also be the name of a method in the class and
+C<Sub::Exporter::Utils::curry_method> will be applied to that method to
+generate the coderef for that keyword.
 
 =cut
 
 =method _dsl_build
 
-Build's up the set of keywords that L<Sub::Exporter> will install.
-
-If it can be invoked on a class (a.k.a. as a class method), usually by C<use>.
-If so, a new instance of the class will be constructed and the various keywords
-I<may> be curried with respect to that instance.
-
-If it is invoked on a class instance, usually via an explicit invocation of
-L<import> then that instance is used when constructing the keywords.
-
-It uses L<Data::OptList::mkopt_hash> to expand its argument passed in via
-C<import>.
+C<_dsl_build> build's up the set of keywords that L<Sub::Exporter> will
+install.
 
 It returns a hashref whose keys are names of keywords and whose values are
 coderefs implementing the respective behavior.
+
+It can be invoked on a class (a.k.a. as a class method), usually by C<use>.  If
+so, a new instance of the class will be constructed and the various keywords
+are curried with respect to that instance.
+
+It can be invoked on a class instance, e.g. via an explicit invocation of
+L<import> on an instance.  If so, then that instance is used when constructing
+the keywords.
 
 =cut
 
 sub _dsl_build {
     my ( $invocant, $group, $arg, $col ) = @_;
 
+    # if not already an instance, create one.
     my $instance = ref $invocant ? $invocant : $invocant->new();
 
+    # fluff up the keyword specification
     my $keywords = Data::OptList::mkopt_hash( $instance->dsl_keywords,
         { moniker => 'keyword list' }, ['HASH'], );
 
     my %dsl = map {
         $_ => $instance->_compile_keyword( $_,
-            $keywords->{$_} )    ## no critic (ProhibitAccessOfPrivateData)
+            $keywords->{$_} )
         }
         keys $keywords;
 
@@ -191,12 +198,9 @@ sub _dsl_build {
 sub _compile_keyword {
     my ( $self, $keyword, $args ) = @_;
 
-    my $generator = $args->{as}    ## no critic (ProhibitAccessOfPrivateData)
-        || curry_method($keyword);
-    my $before_generator
-        = $args->{before};         ## no critic (ProhibitAccessOfPrivateData)
-    my $after_generator
-        = $args->{after};          ## no critic (ProhibitAccessOfPrivateData)
+    my $generator        = $args->{as} || curry_method($keyword);
+    my $before_generator = $args->{before};
+    my $after_generator  = $args->{after};
 
     my $before_code = $before_generator ? $before_generator->($self) : undef;
     my $code        = $generator->($self);
@@ -209,7 +213,8 @@ sub _compile_keyword {
             $before_code->(@_) if $before_code;
 
             # Cribbed from $Class::MOP::Method::Wrapped::_build_wrapped_method
-            # not sure that it doesn't have more parens then necessary, but...
+            # not sure that it doesn't have more parens then necessary, but
+            # if it works for them...
             (   ( defined wantarray )
                 ? (   (wantarray)
                     ? ( @rval = $code->(@_) )
