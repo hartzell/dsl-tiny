@@ -25,11 +25,12 @@ sub build_dsl_keywords {
         break_encapsulation => { as => curry_method('return_self'), },
 
         # chain through has_a relationship
+        # ends up as $dsl->a_helper->beep().
         test_curry_chain => { as => curry_chain( a_helper => 'beep' ), },
 
         # chain through has_a relationship, with an explicit warning to
         # helper's method.
-        # ends up as $dsl->a_helper->beep( warning => 'Andele!') ]
+        # ends up as $dsl->a_helper->beep( warning => 'Andele!').
         test_curry_chain_with_arg => {
             as => curry_chain( a_helper => beep => [ warning => 'Andele!' ] ),
         },
