@@ -27,6 +27,13 @@ sub build_dsl_keywords {
         # chain through has_a relationship
         test_curry_chain => { as => curry_chain( a_helper => 'beep' ), },
 
+        # chain through has_a relationship, with an explicit warning to
+        # helper's method.
+        # ends up as $dsl->a_helper->beep( warning => 'Andele!') ]
+        test_curry_chain_with_arg => {
+            as => curry_chain( a_helper => beep => [ warning => 'Andele!' ] ),
+        },
+
         # a single before generator
         test_simple_before => {
             as     => curry_method('main'),
@@ -65,7 +72,7 @@ sub build_dsl_keywords {
         test_alternate_currier => { as => curry_with_tracer_call('main'), },
 
         naked => { as => naked_generator },
-        bare => { as => naked_generator('naked') },
+        bare  => { as => naked_generator('naked') },
 
     ];
 }

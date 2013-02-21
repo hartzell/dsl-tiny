@@ -2,6 +2,11 @@
 package MyHelper;
 use Moo;
 
-sub beep { return "beep beep" }
+sub beep {
+    my $self = shift;
+    my %args = @_;
+
+    return $args{warning} || "beep beep";
+}
 
 1;
