@@ -35,7 +35,8 @@ cmp_deeply( $dsl->call_log, [], 'clear_call_log works' );
 
 # test that curry_chain works
 is( test_curry_chain, 'beep beep', 'curried chain says beep beep' );
-is( test_curry_chain_with_arg, 'Andele!', 'curried chain with arg says andele' );
+is( test_curry_chain_with_arg, 'Andele!',
+    'curried chain with arg says andele' );
 
 # a single before action
 test_simple_before;
@@ -128,8 +129,8 @@ cmp_deeply(
 );
 clear_trace_log;
 
-is(naked, "buck", 'naked generator works');
-is(bare, "buck", 'naked generator w/ rename works');
+is( naked, "buck", 'naked generator works' );
+is( bare,  "buck", 'naked generator w/ rename works' );
 
 done_testing;
 
