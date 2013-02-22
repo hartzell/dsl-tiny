@@ -5,8 +5,7 @@ package DSL::Tiny::Role;
 
 =head1 SYNOPSIS
 
-    # in a file that ends up on @INC, e.g. MooseDSL.pm
-    # put together class with a simple dsl
+    # In e.g. MooseDSL.pm, describe a simple DSL.
     package MooseDSL;
     
     use Moose;  # or use Moo;
@@ -15,7 +14,7 @@ package DSL::Tiny::Role;
     
     sub build_dsl_keywords {
         return [
-            # simple keyword -> curry_method examples
+            # keywords will be run through curry_method
             qw(argulator return_self clear_call_log),
         ];
     }
@@ -45,7 +44,7 @@ package DSL::Tiny::Role;
     
     use MooseDSL qw( -install_dsl );
     
-    # peek under the covers, get instance
+    # peek under the covers, get the instance
     my $dsl = return_self;
     isa_ok( $dsl, 'MooseDSL' );
     
