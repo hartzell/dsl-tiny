@@ -4,11 +4,3 @@
 * build example for cpanfile
 
 * test with Moose
-
-
-sub _compile_keyword {
-    my ( $self, $keyword, $args ) = @_;
-
-    # generate code for keyword 
-    my $code_generator = $args->{as} || curry_method($keyword);
-    my $code = $code_generator->($self, $keyword);
