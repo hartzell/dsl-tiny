@@ -1,7 +1,7 @@
 ## no critic (RequireUseStrict RequireUseWarnings)
 package DSL::Tiny::Role;
 ## critic
-# ABSTRACT: Simple yet powerful DSL builder.
+# ABSTRACT: A simple yet powerful DSL builder.
 
 =head1 SYNOPSIS
 
@@ -62,6 +62,34 @@ package DSL::Tiny::Role;
 
 =head1 DESCRIPTION
 
+Domain-specific languages (DSL's) provide for efficient expression of
+configurations, problems and solutions within a particular domain.  While some
+DSL's are built from the ground up with custom lexers, parsers,
+etc... (e.g. the Unix build tool "make"), other "internal DSL's" (L<Werner
+Schuster|http://www.infoq.com/news/2007/06/dsl-or-not>) are distilled from
+existing languages and "speak the language of their domain with an accent"
+(L<Piers Cawley|http://www.bofh.org.uk/2007/05/19/domain-agnostic-languages>).
+
+A variety of Perl tools and libraries sport domain specific langagues,
+e.g. L<Dancer>, L<Module-CPANfile> and L<Module-Install> and the number of
+re-implementations of the underlying plumbing is almost exactly equal to the
+number of such modules.  These implementations usually devolve into dirty
+tricks (e.g. explicit package stash manipulations) and wheel re-invention.
+
+L<DSL::Tiny> provides the common functionality required to implement an
+internal DSL, building on powerful foundations (L<Sub::Exporter>) and effective
+techniques (L<Moose> and L<Moo> roles) to allow developers to focus on their
+domain-specific issues.  It builds on a flexible mechanism for exporting a set
+of subroutines into a package; provides a consistent framework for subroutine
+currying; and automates constructing instances, associating them with DSL
+fragments and evaluating those fragments.
+
+In other words, when I needed to build an internal DSL for a project, I was
+shocked at how often the basic brushstrokes had been repeated and how often
+these implementations dug down and peeked underneath Perl's stashes.  These
+modules are my attempt to provide a reusable solution to the problem using
+existing high-leverage tools.
+
 =cut
 
 use Moo::Role;
@@ -100,36 +128,32 @@ Returns an arrayref of dsl keyword info.
 It is lazy.  Classes which consume the role are required to supply a builder
 named C<_build_dsl_keywords>.
 
-=cut
-
-has dsl_keywords => (
-    is      => 'rw',
-    isa     => ArrayRef,
-    lazy    => 1,
-    builder => 'build_dsl_keywords',
-);
-
-=requires build_dsl_keywords
-
-A subroutine, used as the Moo{,se} builder for the L</dsl_keywords> attribute.
-It returns an array reference containing information about the methods and
-subroutines that implement the keywords in the DSL.
-
 In its canonical form the contents of the array reference are a series of array
 references containing keyword_name => { option_hash } pairs, e.g.
 
-  [ [ k1 => { as => &generator } ], [ k2 => { before => &generator ] ]
+  [ [ keyword1 => { as => &generator('method1') } ],
+    [ keyword2 => { before => &generator ]
+  ]
 
 Generators are as described in the L<Sub::Exporter> documentation.
 
 However, as the contents of this array reference are processed with
 Data::OptList there is a great deal of flexibility, e.g.
 
-  [ qw( m1 m2 ), k4 => { as => &generator } ]
+  [ qw( m1 m2 ), k4 => { as => &generator('some_method' } ]
 
 is equivalent to:
 
-  [ m1 => undef, m2 => undef, k4 => { as => generator } ]
+  [ m1 => undef, m2 => undef, k4 => { as => generator('some_method') } ]
+
+Options are optional.  In particular, if no C<as> generator is provided then
+the keyword name is presumed to also be the name of a method in the class and
+C<Sub::Exporter::Utils::curry_method> will be applied to that method to
+generate the coderef for that keyword.  The makes the above equivalent to:
+
+  [ m1 => { as => generator('m1') }, m2 => { as => generator('m2') },
+    k4 => { as => generator('some_method') }
+  ]
 
 In its simplest form, the keyword arrayref contains a list of method names
 relative to class which consumes this role.
@@ -148,10 +172,21 @@ Supported options include:
 
 =back
 
-Options are optional.  In particular, if no C<as> generator is provided then
-the keyword name is presumed to also be the name of a method in the class and
-C<Sub::Exporter::Utils::curry_method> will be applied to that method to
-generate the coderef for that keyword.
+
+=cut
+
+has dsl_keywords => (
+    is      => 'rw',
+    isa     => ArrayRef,
+    lazy    => 1,
+    builder => 'build_dsl_keywords',
+);
+
+=requires build_dsl_keywords
+
+A subroutine, used as the Moo{,se} builder for the L</dsl_keywords> attribute.
+It returns an array reference containing information about the methods and
+subroutines that implement the keywords in the DSL.
 
 =cut
 
