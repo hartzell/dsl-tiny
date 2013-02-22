@@ -1,7 +1,6 @@
 ## no critic (RequireUseStrict RequireUseWarnings)
 package DSL::Tiny::Role;
 ## critic
-
 # ABSTRACT: Import a DSL into a package.
 
 =head1 SYNOPSIS

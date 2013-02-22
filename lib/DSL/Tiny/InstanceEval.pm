@@ -1,7 +1,6 @@
 ## no critic (RequireUseStrict RequireUseWarnings)
 package DSL::Tiny::InstanceEval;
 ## critic
-
 # ABSTRACT: Add DSL features to your class.
 
 =head1 SYNOPSIS
