@@ -198,6 +198,8 @@ subroutines that implement the keywords in the DSL.
 
 =method _dsl_build
 
+Private-ish.  Do you really want to be here?
+
 C<_dsl_build> build's up the set of keywords that L<Sub::Exporter> will
 install.
 
@@ -231,6 +233,10 @@ sub _dsl_build {
 }
 
 =method _compile_keyword
+
+Private, go away.
+
+Generate a sub that implements the keyword, taking care of before's and afters.
 
 =cut
 
