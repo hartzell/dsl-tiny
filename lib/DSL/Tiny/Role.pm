@@ -7,32 +7,32 @@ package DSL::Tiny::Role;
 
     # In e.g. MooseDSL.pm, describe a simple DSL.
     package MooseDSL;
-    
+
     use Moose;  # or use Moo;
-    
+
     with qw(DSL::Tiny::Role);
-    
+
     sub build_dsl_keywords {
         return [
             # keywords will be run through curry_method
             qw(argulator return_self clear_call_log),
         ];
     }
-    
+
     has call_log => (
         clearer => 'clear_call_log',
         default => sub { [] },
         is      => 'rw',
         lazy    => 1
     );
-    
+
     sub argulator {
         my $self = shift;
         push @{ $self->call_log }, join "::", @_;
     }
-    
+
     sub return_self { return $_[0] }
-    
+
     1;
 
     ################################################################
@@ -41,23 +41,23 @@ package DSL::Tiny::Role;
 
     use Test::More;
     use Test::Deep;
-    
+
     use MooseDSL qw( -install_dsl );
-    
+
     # peek under the covers, get the instance
     my $dsl = return_self;
     isa_ok( $dsl, 'MooseDSL' );
-    
+
     # test argument handling, single scalar
     argulator("a scalar");
     cmp_deeply( $dsl->call_log, ['a scalar'], 'scalar arg works' );
     clear_call_log;
-    
+
     # test argument handling, list of args
     argulator(qw(a list of things));
     cmp_deeply( $dsl->call_log, ['a::list::of::things'], 'list arg works' );
     clear_call_log;
-    
+
     done_testing;
 
 =head1 DESCRIPTION
