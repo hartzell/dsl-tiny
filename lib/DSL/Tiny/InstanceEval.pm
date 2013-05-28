@@ -140,9 +140,9 @@ sub instance_eval {    ## no critic(RequireArgUnpacking)
     return $self->_instance_evalator()->(@_);
 }
 
-=requires build_dsl_keywords
+=requires _build_dsl_keywords
 
-Requires build_dsl_keywords, as a proxy for being used in a class that consumes
+Requires _build_dsl_keywords, as a proxy for being used in a class that consumes
 DSL::Tiny::Role.
 
 =cut
