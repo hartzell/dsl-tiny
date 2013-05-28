@@ -62,6 +62,9 @@ package DSL::Tiny::Role;
 
 =head1 DESCRIPTION
 
+I<This is an initial release.  It's all subject to rethinking.  Comments
+welcome.>
+
     every time a language advertises "we make writing dsls easy!" i
     read "i'm going to have to learn a new language for every project"
 

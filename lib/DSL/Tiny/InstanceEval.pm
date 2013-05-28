@@ -41,6 +41,9 @@ package DSL::Tiny::InstanceEval;
 
 =head1 DESCRIPTION
 
+I<This is an initial release.  It's all subject to rethinking.  Comments
+welcome.>
+
 This package provides a simple interface, L</instance_eval>, for evaluating
 snippets of a DSL (implemented with L<DSL::Tiny::Role>) with respect to a
 particular instance of a class that consumes the role.

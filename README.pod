@@ -67,7 +67,15 @@ version 0.001
 
 =head1 DESCRIPTION
 
-Domain-specific languages (DSL's) provide for efficient expression of
+I<This is an initial release.  It's all subject to rethinking.  Comments
+welcome.>
+
+    every time a language advertises "we make writing dsls easy!" i
+    read "i'm going to have to learn a new language for every project"
+
+    Jesse Luehrs (@doyster) 3/8/13, 12:11 PM
+
+Domain-specific languages (DSL's) aid in the efficient expression of
 configurations, problems and solutions within a particular domain.  While some
 DSL's are built from the ground up with custom lexers, parsers,
 etc... (e.g. the Unix build tool "make"), other "internal DSL's" (L<Werner
@@ -79,20 +87,21 @@ A variety of Perl tools and libraries sport domain specific langagues,
 e.g. L<Dancer>, L<Module-CPANfile> and L<Module-Install> and the number of
 re-implementations of the underlying plumbing is almost exactly equal to the
 number of such modules.  These implementations usually devolve into dirty
-tricks (e.g. explicit package stash manipulations) and wheel re-invention.
+tricks (e.g. explicit package stash manipulations) and re-invention of several
+wheels.
 
-L<DSL::Tiny> provides the common functionality required to implement an
+L<DSL::Tiny> packages the common functionality required to implement an
 internal DSL, building on powerful foundations (L<Sub::Exporter>) and effective
 techniques (L<Moose> and L<Moo> roles) to allow developers to focus on their
 domain-specific issues.  It builds on a flexible mechanism for exporting a set
 of subroutines into a package; provides a consistent framework for subroutine
-currying; and automates constructing instances, associating them with DSL
-fragments and evaluating those fragments.
+currying; and automates the construction of instances, their association with
+DSL fragments and the evaluation of those fragments.
 
 In other words, when I needed to build an internal DSL for a project, I was
 shocked at how often the basic brushstrokes had been repeated and how often
 these implementations dug down and peeked underneath Perl's stashes.  These
-modules are my attempt to provide a reusable solution to the problem using
+modules are my attempt to provide a reusable solution to the problem via
 existing high-leverage tools.
 
 =head1 ATTRIBUTES
@@ -168,6 +177,8 @@ one uses it to install into an instance.
 
 =head2 _dsl_build
 
+Private-ish.  Do you really want to be here?
+
 C<_dsl_build> build's up the set of keywords that L<Sub::Exporter> will
 install.
 
@@ -184,6 +195,10 @@ the keywords.
 
 =head2 _compile_keyword
 
+Private, go away.
+
+Generate a sub that implements the keyword, taking care of before's and afters.
+
 =head1 REQUIRES
 
 =head2 build_dsl_keywords
@@ -198,6 +213,8 @@ George Hartzell <hartzell@alerce.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by George Hartzell.  No
-license is granted to other entities.
+This software is copyright (c) 2013 by George Hartzell.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
